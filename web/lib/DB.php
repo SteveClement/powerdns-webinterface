@@ -44,16 +44,15 @@ class DB {
     private function connect() {
     	if($this->connection)
     		return;
-    	$this->connection = mysql_connect($this->cfg['host'], $this->cfg['username'], $this->cfg['password']);
-    	if($error = mysql_error())
+    	$this->connection = mysqli_connect($this->cfg['host'], $this->cfg['username'], $this->cfg['password'], $this->cfg['database']);
+    	if($error = mysqli_error($this->connection))
     		throw new Exception(_("Database connection failed: ").$error);
-    	mysql_select_db($this->cfg['database'], $this->connection);
-    	if($error = mysql_error($this->connection))
+    	if($error = mysqli_error($this->connection))
     		throw new Exception(_("Database connection failed: ").$error);
 
 	// we use unicode so get into utf8 mode ;)
-    	mysql_query("SET NAMES 'utf8'", $this->connection);
-   	mysql_query("SET CHARACTER SET 'utf8'", $this->connection);
+    	mysqli_query($this->connection, "SET NAMES 'utf8'");
+   	mysqli_query($this->connection, "SET CHARACTER SET 'utf8'");
     }
 
     /**
@@ -61,7 +60,7 @@ class DB {
      */
     private function disconnect() {
     	if($this->connection)
-    		mysql_close($this->connection);
+    		mysqli_close($this->connection);
     }
 
     /**
@@ -83,9 +82,9 @@ class DB {
     private function _doQuery($sql) {
     	$this->connect();
     	$start = microtime();
-    	$query = mysql_query($sql, $this->connection);
+    	$query = mysqli_query($this->connection, $sql);
     	$this->debug[] = array($sql, (microtime()-$start)*100000);
-    	if($error = mysql_error($this->connection))
+    	if($error = mysqli_error($this->connection))
     		throw new Exception("Error in SQL Query: {$sql} ({$error})");
     	return new DB_Result($query);
     }
@@ -136,7 +135,7 @@ class DB {
      * @return int
      */
     public function insertId() {
-    	return mysql_insert_id($this->connection);
+    	return mysqli_insert_id($this->connection);
     }
 
     /**
@@ -145,7 +144,7 @@ class DB {
      * @return int
      */
     public function affectedRows() {
-    	return mysql_affected_rows($this->connection);
+    	return mysqli_affected_rows($this->connection);
     }
 
     /**
@@ -176,8 +175,8 @@ class DB_Result {
 
 	public function fetchRow($num = 0) {
 		if($num)
-			return mysql_fetch_row($this->qr);
+			return mysqli_fetch_row($this->qr);
 		else
-			return mysql_fetch_assoc($this->qr);
+			return mysqli_fetch_assoc($this->qr);
 	}
 }
